@@ -37,6 +37,11 @@ fn get_files(args: &cli::Arg) -> Result<Vec<FileItem>> {
 
     for entry in fs::read_dir(target_dir)? {
         let entry = entry?;
+        //通过"."开头判断是否为隐藏文件
+        // TODO windows平台应该通过metadata确定是否为隐藏文件
+        if !args.all && entry.file_name().to_string_lossy().starts_with(".") {
+            continue;
+        }
         files.push(FileItem::from(&entry)?);
         
     }
