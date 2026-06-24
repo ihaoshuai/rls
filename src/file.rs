@@ -1,12 +1,18 @@
-use std::{fmt::Display, fs::DirEntry, time::SystemTime};
+use std::{fmt::Display, fs::DirEntry, path::PathBuf, time::SystemTime};
 
 use anyhow::Result;
 use tabled::Tabled;
 
+#[cfg(unix)]
+pub use unix::*;
+#[cfg(windows)]
+pub use windows::*;
 
 #[derive(Tabled)]
 pub struct FileItem {
     name: String,
+    #[tabled(skip)]
+    path: PathBuf,
     #[tabled(display("file_size_format"))]
     size: u64,
     #[tabled(rename = "type")]
@@ -15,6 +21,7 @@ pub struct FileItem {
     modified: u64,
 }
 
+
 impl FileItem {
     pub fn from(entry: &DirEntry) -> Result<Self> {
         let metadata = entry.metadata()?;
@@ -22,10 +29,19 @@ impl FileItem {
         let modified_sec = SystemTime::now().duration_since(metadata.modified()?)?.as_secs();
         Ok(Self {
                 name: file_name,
+                path: entry.path(),
                 size: metadata.len(),
                 r#type: if metadata.is_dir() { FileType::Dir } else { FileType::File },
                 modified: modified_sec,
             })
+    }
+
+    pub fn du(&mut self) -> Result<()>
+    {
+        if self.r#type == FileType::Dir {
+            self.size = get_dir_size(&self.path)?;
+        }
+        Ok(())
     }
 }
 
@@ -56,7 +72,7 @@ fn modified_sec_format(sec: &u64) -> String {
     
 }
 
-
+#[derive(PartialEq, Eq)]
 enum FileType {
     Dir,
     File,
@@ -70,5 +86,50 @@ impl Display for FileType {
         };
         write!(f, "{}", output_str)?;
         Ok(())
+    }
+}
+
+
+#[cfg(unix)]
+mod unix {
+    use std::{fs, path::Path};
+
+    use anyhow::{Ok, Result};
+
+    // TODO why the blocks() method alawys return zero? it is not work
+    // pub fn get_dir_size(metadata: &Metadata) -> u64
+    // {
+    //     use std::os::unix::fs::MetadataExt;
+    //     println!("{}", metadata.blocks() * 512);
+    //     metadata.blocks() * 512
+    // }
+
+
+    pub fn get_dir_size<P: AsRef<Path>>(path: P) -> Result<u64>
+    {
+        let mut size = 0;
+        for entry in fs::read_dir(path)? {
+            let entry = entry?;
+            let meta = entry.metadata()?;
+            if meta.is_dir() {
+                size += get_dir_size(entry.path())?;
+            }else {
+                size += meta.len();
+            }
+        }
+        Ok(size)
+    }
+}
+
+
+#[cfg(windows)]
+mod windows {
+    use std::path::Path;
+    use anyhow::Result;
+
+    pub fn get_dir_size<P: AsRef<Path>>(path: P) -> Result<u64>
+    {
+        // TODO windows platform to get dir size
+        Ok(0)
     }
 }

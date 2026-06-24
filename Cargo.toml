@@ -7,3 +7,8 @@ edition = "2024"
 anyhow = "1.0.102"
 clap = { version = "4.6.1", features = ["derive"] }
 tabled = "0.21.0"
+
+
+[target.windows.dependencies]
+windows = "0.62.2"
+ 

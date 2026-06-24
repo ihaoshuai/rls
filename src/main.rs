@@ -42,7 +42,11 @@ fn get_files(args: &cli::Arg) -> Result<Vec<FileItem>> {
         if !args.all && entry.file_name().to_string_lossy().starts_with(".") {
             continue;
         }
-        files.push(FileItem::from(&entry)?);
+        let mut file_item = FileItem::from(&entry)?;
+        if args.du {
+            file_item.du()?;
+        }
+        files.push(file_item);
         
     }
 

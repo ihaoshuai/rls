@@ -7,4 +7,7 @@ pub struct Arg {
 
     #[arg(short, long)]
     pub all: bool,
+
+    #[arg(short, long)]
+    pub du: bool,
 }
