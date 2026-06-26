@@ -2,21 +2,27 @@ use std::{fmt::Display, fs::DirEntry, path::PathBuf, time::SystemTime};
 
 use anyhow::Result;
 use tabled::Tabled;
+use colored::Colorize;
 
 #[cfg(unix)]
 pub use unix::*;
 #[cfg(windows)]
 pub use windows::*;
 
+const C_DIR: RGB = RGB::new(69, 133, 136);
+const C_TIME: RGB = RGB::new(211, 134, 155);
+const C_SIZE: RGB = RGB::new(104,157,106);
+
+
 #[derive(Tabled)]
 pub struct FileItem {
     name: String,
     #[tabled(skip)]
     path: PathBuf,
-    #[tabled(display("file_size_format"))]
-    size: u64,
     #[tabled(rename = "type")]
     r#type: FileType,
+    #[tabled(display("file_size_format"))]
+    size: u64,
     #[tabled(display("modified_sec_format"))]
     modified: u64,
 }
@@ -25,7 +31,10 @@ pub struct FileItem {
 impl FileItem {
     pub fn from(entry: &DirEntry) -> Result<Self> {
         let metadata = entry.metadata()?;
-        let file_name = entry.file_name().to_string_lossy().into_owned();
+        let mut file_name = entry.file_name().to_string_lossy().into_owned();
+        if metadata.is_dir() {
+            file_name = file_name.truecolor(C_DIR.r, C_DIR.g, C_DIR.b).to_string(); 
+        }
         let modified_sec = SystemTime::now().duration_since(metadata.modified()?)?.as_secs();
         Ok(Self {
                 name: file_name,
@@ -53,7 +62,7 @@ fn file_size_format(size: &u64) -> String {
         size /= 1024;
         i += 1;
     }
-    return format!("{} {}", size, size_units[i]);
+    return format!("{} {}", size, size_units[i]).truecolor(C_SIZE.r, C_SIZE.g, C_SIZE.b).to_string();
 }
 
 fn modified_sec_format(sec: &u64) -> String {
@@ -68,7 +77,7 @@ fn modified_sec_format(sec: &u64) -> String {
         }
         i -= 1;
     };
-    return format!("{} {} ago", res[i], time_unit[i]);
+    return format!("{} {} ago", res[i], time_unit[i]).truecolor(C_TIME.r, C_TIME.g, C_TIME.b).to_string();
     
 }
 
@@ -81,7 +90,7 @@ enum FileType {
 impl Display for FileType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let output_str = match self {
-            FileType::Dir => "dir",
+            FileType::Dir => &"dir".truecolor(C_DIR.r, C_DIR.g, C_DIR.b).to_string(),
             FileType::File => "file",
         };
         write!(f, "{}", output_str)?;
@@ -132,4 +141,18 @@ mod windows {
         // TODO windows platform to get dir size
         Ok(0)
     }
+}
+
+
+struct RGB {
+    r: u8,
+    g: u8,
+    b: u8,
+}
+
+impl RGB {
+    const fn new(r: u8, g: u8, b: u8) -> Self {
+        Self { r, g, b }
+    }
+    
 }
