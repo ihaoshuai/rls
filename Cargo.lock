@@ -244,17 +244,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rls"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "colored",
- "tabled",
- "windows",
-]
-
-[[package]]
 name = "strsim"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -305,6 +294,17 @@ checksum = "0f8daae29995a24f65619e19d8d31dea5b389f3d853d8bf297bbf607cd0014cc"
 dependencies = [
  "ansitok",
  "unicode-width",
+]
+
+[[package]]
+name = "tls"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "colored",
+ "tabled",
+ "windows",
 ]
 
 [[package]]

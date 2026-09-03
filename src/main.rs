@@ -3,7 +3,7 @@ use std::{env, fs};
 use anyhow::{Ok, Result, anyhow};
 use clap::Parser;
 use tabled::{Table, settings::{Alignment, Color, Style, object::{Columns, Rows}}};
-use rls::{cli, file::FileItem};
+use tls::{cli, file::FileItem};
 
 
 fn main() -> Result<()>{
@@ -11,7 +11,7 @@ fn main() -> Result<()>{
     let files = get_files(&args)?;
     let mut table = Table::new(files);
     table.with(Style::rounded());
-    table.modify(Columns::one(1), Alignment::right());
+    table.modify(Columns::one(2), Alignment::right());
     table.modify(Rows::first(), Color::rgb_fg(152,151,26));
 
     println!("{}", table);
